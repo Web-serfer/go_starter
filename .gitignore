@@ -1,0 +1,47 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace file
+.vscode/
+.idea/
+
+# Compiled Object files
+*.o
+*.a
+*.h
+
+# Test binary, built with `go test -c`
+*.test
+
+# Coverage profiles
+*.out
+
+# Dependency directories (if any)
+vendor/
+
+# Compiled binaries
+bin/
+main.exe
+
+# Environment specific files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+.DS_Store
+
+# Go workspace
+go.work
+go.work.sum
