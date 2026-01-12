@@ -1,0 +1,60 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.jar
+*.class
+
+# Go build and test artifacts
+*.test
+*.prof
+*.trace
+
+# Go workspace
+bin/
+pkg/
+
+# Project specific binaries
+app.exe
+
+# Temporary build files
+/_obj/
+/_test/
+/_tmp/
+
+# Dependency directories (except vendor)
+vendor/
+
+# Log files
+*.log
+logs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Genkit files
+.genkit/
+
+# Coverage
+coverage.out
+cover.html
+
+# Environment specific
+.env
+.env.local
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
