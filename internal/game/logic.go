@@ -9,104 +9,116 @@ import (
 	"time"
 
 	"github.com/Web-serfer/app/internal/constants"
-	"github.com/Web-serfer/app/internal/types"
 )
 
-// Запуск основного цикла игры
 func RunGame() {
+	// Инициализация случайных чисел (для новых версий Go можно опустить)
 	rand.Seed(time.Now().UnixNano())
 	scanner := bufio.NewScanner(os.Stdin)
 
 	// --- ЭКРАН ПРИВЕТСТВИЯ ---
-	fmt.Println(constants.Cyan + "========================================")
-	fmt.Println("    ДОБРО ПОЖАЛОВАТЬ В ГЕО-КВИЗ!")
-	fmt.Println("========================================" + constants.Reset)
-	fmt.Println("Вы готовы проверить свои знания и")
-	fmt.Println("отгадать столицы 10 стран?")
-	fmt.Println("\n1. Да, поехали!")
-	fmt.Println("2. Нет, я еще не готов.")
-	fmt.Print("\nВыберите вариант (1 или 2): ")
+	fmt.Println(constants.Cyan + "\n╔════════════════════════════════════════╗")
+	fmt.Println("║      ДОБРО ПОЖАЛОВАТЬ В ГЕО-КВИЗ!      ║")
+	fmt.Println("╚════════════════════════════════════════╝" + constants.Reset)
+	fmt.Println("Отгадайте столицы 10 стран. У вас 3 жизни.")
+	fmt.Println(constants.Gray + "Подсказка появится автоматически после 2-й ошибки." + constants.Reset)
+	fmt.Print("\nГотовы начать? (1 - Да / 2 - Выход): ")
 
 	scanner.Scan()
 	choice := strings.TrimSpace(scanner.Text())
 
-	// Используем switch для обработки выбора в меню
-	switch choice {
-	case "1", "Да", "да", "д", "y", "yes":
-		fmt.Println(constants.Green + "\nОтлично! Начинаем игру...\n" + constants.Reset)
-		time.Sleep(1 * time.Second) // Небольшая пауза для эффекта
-	case "2", "Нет", "нет", "н", "n", "no":
-		fmt.Println(constants.Yellow + "Жаль! Возвращайтесь, когда будете готовы. Пока!" + constants.Reset)
-		return // Завершаем программу
-	default:
-		fmt.Println(constants.Red + "Не совсем понял ответ, но, кажется, вы не готовы. До свидания!" + constants.Reset)
+	if choice != "1" && !strings.EqualFold(choice, "да") && !strings.EqualFold(choice, "y") {
+		fmt.Println(constants.Yellow + "До встречи! Возвращайтесь за победой." + constants.Reset)
 		return
 	}
 
-	// Получаем вопросы для игры
 	questions := GetQuestions()
-
-	// Используем тип для демонстрации, что импорт нужен
-	var _ types.Question
-
-	// Перемешиваем вопросы
 	rand.Shuffle(len(questions), func(i, j int) {
 		questions[i], questions[j] = questions[j], questions[i]
 	})
 
-	// --- ОСНОВНОЙ ЦИКЛ ИГРЫ ---
+	// --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
 	lives := 3
 	score := 0
 
 	for i, q := range questions {
 		if lives <= 0 {
+			fmt.Println(constants.Red + "\n💔 Упс! У вас закончились жизни..." + constants.Reset)
 			break
 		}
 
-		fmt.Printf(constants.Blue+"[Вопрос %d/10]"+constants.Reset+" Назовите столицу %s?\n", i+1, constants.Yellow+q.CountryGenitive+constants.Reset)
+		fmt.Printf(constants.Blue+"\n---------- [ ВОПРОС %d из %d ] ----------\n"+constants.Reset, i+1, len(questions))
+		fmt.Printf("Страна: "+constants.Yellow+"%s\n"+constants.Reset, q.CountryGenitive)
 
 		attempt := 0
 		for attempt < 4 {
-			// Статус
-			fmt.Printf("Жизни: %s | Попытка: %d/4\n", strings.Repeat("❤️", lives), attempt+1)
-			fmt.Print("Ваш ответ: ")
+			// Красивый статус-бар
+			status := fmt.Sprintf(constants.Gray+"[Жизни: %s%s"+constants.Gray+"] [Счет: %d]"+constants.Reset,
+				constants.Red+strings.Repeat("❤️", lives), constants.Gray+strings.Repeat("🖤", 3-lives), score)
+			fmt.Println(status)
 
+			fmt.Print("Ваш ответ: ")
 			scanner.Scan()
 			input := strings.TrimSpace(scanner.Text())
 
-			// Валидация
+			// 1. Валидация
 			if input == "" {
-				fmt.Println(constants.Red + "(!) Пожалуйста, введите название. Пустой ответ не принимается." + constants.Reset)
+				fmt.Println(constants.Gray + "(!) Введите название города..." + constants.Reset)
 				continue
 			}
 
-			// Проверка (через switch для интереса)
-			isCorrect := strings.ToLower(input) == strings.ToLower(q.Capital)
+			// 2. Обработка сдачи
+			if strings.EqualFold(input, "не знаю") || strings.EqualFold(input, "сдаюсь") {
+				fmt.Printf(constants.Yellow+"Очень жаль. Это был город %s.\n"+constants.Reset, q.Capital)
+				lives--
+				break
+			}
 
-			switch {
-			case isCorrect:
-				fmt.Println(constants.Green + "🌟 Абсолютно верно!" + constants.Reset)
-				fmt.Printf(constants.Cyan+"Интересный факт: %s\n\n"+constants.Reset, q.Fact)
+			// 3. Проверка ответа
+			if strings.EqualFold(input, q.Capital) {
+				fmt.Println(constants.Green + "✅ ВЕРНО! " + constants.Reset)
+				fmt.Printf(constants.Cyan+"📖 Факт: %s\n"+constants.Reset, q.Fact)
+
+				// Начисление баллов (чем меньше попыток, тем выше балл)
 				score += (4 - attempt) * 10
-				goto nextQuestion // Переходим к следующему вопросу
-
-			case !isCorrect:
+				break
+			} else {
+				// Ошибка
 				attempt++
+
 				switch attempt {
-				case 1, 2, 3:
-					fmt.Printf(constants.Red+"❌ Ошибка! Подсказка %d: %s\n"+constants.Reset, attempt, q.Hints[attempt-1])
+				case 1:
+					fmt.Println(constants.Red + "❌ Не совсем так. Попробуйте еще раз!" + constants.Reset)
+				case 2:
+					// АВТОМАТИЧЕСКАЯ ПОДСКАЗКА после 2-й ошибки
+					fmt.Println(constants.Red + "❌ Снова мимо." + constants.Reset)
+					if len(q.Hints) > 0 {
+						fmt.Printf(constants.Yellow+"💡 ПОДСКАЗКА: %s\n"+constants.Reset, q.Hints[0])
+					}
+				case 3:
+					fmt.Println(constants.Red + "❌ Ой-ой! Последняя попытка!" + constants.Reset)
+					if len(q.Hints) > 1 {
+						fmt.Printf(constants.Yellow+"💡 ВТОРАЯ ПОДСКАЗКА: %s\n"+constants.Reset, q.Hints[1])
+					}
 				case 4:
-					fmt.Printf(constants.Red+"💀 Вы не справились. Правильный ответ: %s\n"+constants.Reset, q.Capital)
+					fmt.Printf(constants.Red+"💀 Ошибок слишком много! Правильный ответ: %s\n"+constants.Reset, q.Capital)
+					fmt.Printf(constants.Cyan+"📖 Факт: %s\n"+constants.Reset, q.Fact)
 					lives--
 				}
 			}
 		}
-	nextQuestion: // Метка для быстрого перехода
+		fmt.Println(constants.Gray + "------------------------------------------" + constants.Reset)
 	}
 
-	// --- ФИНАЛ ---
-	fmt.Printf("\n" + constants.Cyan + "========================================")
-	fmt.Printf("\nИГРА ЗАВЕРШЕНА!")
-	fmt.Printf("\nВаш итоговый счет: %d баллов", score)
-	fmt.Printf("\n========================================\n" + constants.Reset)
+	// --- ФИНАЛЬНЫЙ ЭКРАН ---
+	fmt.Printf("\n" + constants.Cyan + "╔════════════════════════════════════════╗")
+	fmt.Printf("\n║            ИГРА ЗАВЕРШЕНА!             ║")
+	fmt.Printf("\n║       Ваш итоговый счет: %-5d         ║", score)
+	fmt.Printf("\n╚════════════════════════════════════════╝\n" + constants.Reset)
+
+	if lives > 0 {
+		fmt.Println(constants.Green + "Поздравляем! Вы настоящий географ! 🌍" + constants.Reset)
+	} else {
+		fmt.Println(constants.Yellow + "Хорошая попытка! Попробуйте еще раз, чтобы улучшить результат." + constants.Reset)
+	}
 }
