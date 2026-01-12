@@ -11,8 +11,8 @@ import (
 	"github.com/Web-serfer/app/internal/constants"
 )
 
+// RunGame — запускает основной процесс игры
 func RunGame() {
-	// Инициализация случайных чисел (для новых версий Go можно опустить)
 	rand.Seed(time.Now().UnixNano())
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -43,7 +43,7 @@ func RunGame() {
 
 	for i, q := range questions {
 		if lives <= 0 {
-			fmt.Println(constants.Red + "\n💔 Упс! У вас закончились жизни..." + constants.Reset)
+			fmt.Println(constants.Red + "\n💔 Упс! У вас закончились все жизни..." + constants.Reset)
 			break
 		}
 
@@ -52,7 +52,7 @@ func RunGame() {
 
 		attempt := 0
 		for attempt < 4 {
-			// Красивый статус-бар
+			// Статус-бар (Жизни и Счет)
 			status := fmt.Sprintf(constants.Gray+"[Жизни: %s%s"+constants.Gray+"] [Счет: %d]"+constants.Reset,
 				constants.Red+strings.Repeat("❤️", lives), constants.Gray+strings.Repeat("🖤", 3-lives), score)
 			fmt.Println(status)
@@ -79,7 +79,7 @@ func RunGame() {
 				fmt.Println(constants.Green + "✅ ВЕРНО! " + constants.Reset)
 				fmt.Printf(constants.Cyan+"📖 Факт: %s\n"+constants.Reset, q.Fact)
 
-				// Начисление баллов (чем меньше попыток, тем выше балл)
+				// Начисление баллов (зависит от попытки)
 				score += (4 - attempt) * 10
 				break
 			} else {
@@ -90,7 +90,6 @@ func RunGame() {
 				case 1:
 					fmt.Println(constants.Red + "❌ Не совсем так. Попробуйте еще раз!" + constants.Reset)
 				case 2:
-					// АВТОМАТИЧЕСКАЯ ПОДСКАЗКА после 2-й ошибки
 					fmt.Println(constants.Red + "❌ Снова мимо." + constants.Reset)
 					if len(q.Hints) > 0 {
 						fmt.Printf(constants.Yellow+"💡 ПОДСКАЗКА: %s\n"+constants.Reset, q.Hints[0])
@@ -110,15 +109,23 @@ func RunGame() {
 		fmt.Println(constants.Gray + "------------------------------------------" + constants.Reset)
 	}
 
-	// --- ФИНАЛЬНЫЙ ЭКРАН ---
-	fmt.Printf("\n" + constants.Cyan + "╔════════════════════════════════════════╗")
-	fmt.Printf("\n║            ИГРА ЗАВЕРШЕНА!             ║")
-	fmt.Printf("\n║       Ваш итоговый счет: %-5d         ║", score)
-	fmt.Printf("\n╚════════════════════════════════════════╝\n" + constants.Reset)
+	// ВЫЗОВ ФУНКЦИИ ОКОНЧАНИЯ ИГРЫ
+	printFinalResults(score, lives)
+}
+
+// printFinalResults — вспомогательная функция для красивого вывода итогов
+func printFinalResults(score int, lives int) {
+	fmt.Println(constants.Cyan + "\n╔════════════════════════════════════════╗")
+	fmt.Println("║            ИГРА ЗАВЕРШЕНА!             ║")
+	fmt.Printf("║       Ваш итоговый счет: %-13d ║\n", score)
+	fmt.Println("╚════════════════════════════════════════╝" + constants.Reset)
 
 	if lives > 0 {
 		fmt.Println(constants.Green + "Поздравляем! Вы настоящий географ! 🌍" + constants.Reset)
+		fmt.Println(constants.Gray + "Вы прошли игру, сохранив жизни. Это крутой результат!" + constants.Reset)
 	} else {
+		fmt.Println(constants.Red + "💔 Жизни закончились." + constants.Reset)
 		fmt.Println(constants.Yellow + "Хорошая попытка! Попробуйте еще раз, чтобы улучшить результат." + constants.Reset)
 	}
+	fmt.Println() // Пустая строка в конце
 }
